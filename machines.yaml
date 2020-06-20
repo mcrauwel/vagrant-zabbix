@@ -1,0 +1,22 @@
+---
+zabbix:
+  type: 'zabbix-server'
+  box: 'ubuntu/bionic64' # required, currently only deb-based supported
+  ip: '172.16.142.61' # required, needs to be unique
+  zabbix_db: 'postgres' # 'postgres' or 'mysql'
+  exposed_ports:
+    80: 8080
+mysql1:
+  type: 'mysql-server'
+  box: 'ubuntu/bionic64'
+  ip: '172.16.142.71'
+  mysql_flavour: 'community' # not yet implemented
+  mysql_version: '5.7' # not yes implemented
+postgresql1:
+  type: 'postgresql-server'
+  box: 'ubuntu/bionic64'
+  ip: '172.16.142.81'
+sysbench:
+  type: 'application-server'
+  box: 'ubuntu/bionic64'
+  ip: '172.16.142.62'
