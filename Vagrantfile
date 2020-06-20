@@ -55,8 +55,11 @@ Vagrant.configure("2") do |config|
               echo "127.0.0.1:5432:zabbix:zabbix:zabbix" > ~/.pgpass
               chmod 600 ~/.pgpass
 
-              wget --quiet https://repo.zabbix.com/zabbix/5.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.0-1+bionic_all.deb -O /root/zabbix-release.deb
-              dpkg -i /root/zabbix-release.deb
+              if [[ ! -f /root/zabbix-release.deb ]]
+              then
+                wget --quiet https://repo.zabbix.com/zabbix/5.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.0-1+bionic_all.deb -O /root/zabbix-release.deb
+                dpkg -i /root/zabbix-release.deb
+              fi
 
               apt-get update -y -qq
               apt-get install -y zabbix-server-pgsql zabbix-frontend-php zabbix-agent libapache2-mod-php php-gd php-xml php-pgsql -qq
@@ -116,8 +119,11 @@ $IMAGE_FORMAT_DEFAULT = IMAGE_FORMAT_PNG;
               mysql -e "CREATE USER IF NOT EXISTS zabbix@localhost IDENTIFIED WITH mysql_native_password BY 'zabbix';"
               mysql -e "GRANT ALL ON zabbix.* TO zabbix@localhost;"
 
-              wget --quiet https://repo.zabbix.com/zabbix/5.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.0-1+bionic_all.deb -O /root/zabbix-release.deb
-              dpkg -i /root/zabbix-release.deb
+              if [[ ! -f /root/zabbix-release.deb ]]
+              then
+                wget --quiet https://repo.zabbix.com/zabbix/5.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.0-1+bionic_all.deb -O /root/zabbix-release.deb
+                dpkg -i /root/zabbix-release.deb
+              fi
 
               apt-get update -y -qq
               apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-agent libapache2-mod-php php-gd php-xml php-mysql -qq
@@ -170,8 +176,12 @@ $IMAGE_FORMAT_DEFAULT = IMAGE_FORMAT_PNG;
           node.vm.provision "shell", inline: <<-SHELL
             echo "installing MySQL (flavour: #{specs['mysql_flavour']}, version: #{specs['mysql_version']}) on #{hostname}"
 
-            wget --quiet https://repo.zabbix.com/zabbix/5.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.0-1+bionic_all.deb -O /root/zabbix-release.deb
-            dpkg -i /root/zabbix-release.deb
+            if [[ ! -f /root/zabbix-release.deb ]]
+            then
+              wget --quiet https://repo.zabbix.com/zabbix/5.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.0-1+bionic_all.deb -O /root/zabbix-release.deb
+              dpkg -i /root/zabbix-release.deb
+            fi
+
 
             apt-get update -y -qq
             apt-get install -y mysql-server zabbix-agent -qq
@@ -206,8 +216,11 @@ password = 'monitor'" > /var/lib/zabbix/.my.cnf
           node.vm.provision "shell", inline: <<-SHELL
             echo "installing PostgreSQL on #{hostname}"
 
-            wget --quiet https://repo.zabbix.com/zabbix/5.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.0-1+bionic_all.deb -O /root/zabbix-release.deb
-            dpkg -i /root/zabbix-release.deb
+            if [[ ! -f /root/zabbix-release.deb ]]
+            then
+              wget --quiet https://repo.zabbix.com/zabbix/5.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.0-1+bionic_all.deb -O /root/zabbix-release.deb
+              dpkg -i /root/zabbix-release.deb
+            fi
 
             apt-get update -y -qq
             apt-get install -y postgresql zabbix-agent -qq
