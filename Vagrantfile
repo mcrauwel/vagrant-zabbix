@@ -192,7 +192,7 @@ Hostname=#{hostname}
 " >> /etc/zabbix/zabbix_agentd.conf
 
 
-            mysql -e "CREATE USER zbx_monitor@localhost IDENTIFIED WITH mysql_native_password BY 'monitor';"
+            mysql -e "CREATE USER IF NOT EXISTS zbx_monitor@localhost IDENTIFIED WITH mysql_native_password BY 'monitor';"
             mysql -e "GRANT USAGE,REPLICATION CLIENT,PROCESS,SHOW DATABASES,SHOW VIEW ON *.* TO zbx_monitor@localhost;"
 
             mkdir -p /var/lib/zabbix
@@ -236,7 +236,7 @@ Hostname=#{hostname}
             mkdir -p /var/lib/zabbix
             chown zabbix:zabbix /var/lib/zabbix
 
-            echo "*:5432:postgres:zbx_monitor:monitor" > /var/lib/zabbix/.pgpass
+            echo "*:5432:*:zbx_monitor:monitor" > /var/lib/zabbix/.pgpass
             chown zabbix:zabbix /var/lib/zabbix/.pgpass
             chmod 600 /var/lib/zabbix/.pgpass
 
