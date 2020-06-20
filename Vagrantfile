@@ -195,6 +195,31 @@ Hostname=#{hostname}
             mysql -e "CREATE USER IF NOT EXISTS zbx_monitor@localhost IDENTIFIED WITH mysql_native_password BY 'monitor';"
             mysql -e "GRANT USAGE,REPLICATION CLIENT,PROCESS,SHOW DATABASES,SHOW VIEW ON *.* TO zbx_monitor@localhost;"
 
+            mysql -e "CREATE DATABASE IF NOT EXISTS sbtest;"
+            mysql -e "CREATE USER IF NOT EXISTS sbtest@'%' IDENTIFIED WITH mysql_native_password BY '123456';"
+            mysql -e "GRANT ALL ON sbtest.* TO sbtest@'%';"
+
+            echo "[mysqld]
+bind-address = 0.0.0.0
+
+innodb-buffer-pool-size = 512M
+innodb-buffer-pool-instances = 8
+innodb-log-file-size = 512M
+innodb-flush-method = O_DIRECT
+innodb-flush-log-at-trx-commit = 1
+
+log-bin
+server-id = #{spec['ip'].gsub(/./, '')}
+gtid-mode = ON
+enforce-gtid-consistency = ON
+sync-binlog = 1
+
+query-cache-size = 0
+query-cache-type = 0
+" > /etc/mysql/mysql.conf.d/zzz-overrides.cnf
+
+            systemctl restart mysql.service
+
             mkdir -p /var/lib/zabbix
             chown zabbix:zabbix /var/lib/zabbix
 
@@ -233,6 +258,10 @@ Hostname=#{hostname}
             sudo -u postgres psql -c "CREATE USER zbx_monitor WITH PASSWORD 'monitor' INHERIT;"
             sudo -u postgres psql -c "GRANT pg_monitor TO zbx_monitor;"
 
+            sudo -u postgres psql -c "CREATE USER sbtest WITH PASSWORD '123456' INHERIT;"
+            sudo -u postgres psql -c "CREATE DATABASE sbtest WITH OWNER = sbtest"
+            sudo -u postgres psql -c "GRANT ALL ON DATABASE sbtest TO sbtest;"
+
             mkdir -p /var/lib/zabbix
             chown zabbix:zabbix /var/lib/zabbix
 
@@ -244,7 +273,14 @@ Hostname=#{hostname}
 host all zbx_monitor 0.0.0.0/0 md5
 host all zbx_monitor ::0/0 md5" >> /etc/postgresql/10/main/pg_hba.conf
 
-            sudo -u postgres pg_ctlcluster 10 main reload
+            echo "host sbtest sbtest 127.0.0.1/32 trust
+host sbtest sbtest 0.0.0.0/0 md5" >> /etc/postgresql/10/main/pg_hba.conf
+
+            echo "listen_addresses = '*'
+shared_buffers = 512MB
+" >> /etc/postgresql/10/main/postgresql.conf
+
+            systemctl restart postgresql.service
 
             if [[ -f /vagrant/postgresql/template_db_postgresql.conf ]]
             then
@@ -253,6 +289,23 @@ host all zbx_monitor ::0/0 md5" >> /etc/postgresql/10/main/pg_hba.conf
             fi
 
             systemctl restart zabbix-agent.service
+
+          SHELL
+        else
+          node.vm.provision "shell", inline: <<-SHELL
+            echo "installing #{hostname} as #{specs['type']}"
+
+            apt-get update -y -qq
+            apt-get install -y -qq mysql-client postgresql-client wget
+
+            if [[ ! -f /root/percona-release.deb ]]
+            then
+              wget --quiet https://repo.percona.com/apt/percona-release_latest.generic_all.deb -O /root/percona-release.deb
+              dpkg -i percona-release
+            fi
+
+            apt-get update -y -qq
+            apt-get install -y -qq sysbench
 
           SHELL
         end # case server-type
